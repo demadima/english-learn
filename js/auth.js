@@ -46,7 +46,7 @@ const AuthService = (() => {
         const { deleteUser } = window.firebaseAuthModule;
 
         try {
-            // 1. Delete all user words in Firestore
+            // 1. Delete all user words in Firestore first
             if (db && fs) {
                 const wordsRef = fs.collection(db, "users", uid, "words");
                 const snapshot = await fs.getDocs(wordsRef);

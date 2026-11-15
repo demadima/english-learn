@@ -1,5 +1,7 @@
 /**
- * Storage & Cloud Repository Module (LocalStorage + User-Scoped Firestore Sync with Native Timestamps & Auto-IDs)
+ * Storage & Cloud Repository Module
+ * Guest mode: LocalStorage / words.json
+ * Logged-in mode: Strictly Firestore Cloud Storage (0 words if empty, no auto-seeding demo words).
  */
 const StorageRepository = (() => {
     let words = [];
@@ -13,12 +15,21 @@ const StorageRepository = (() => {
     });
 
     async function load() {
+        const user = typeof AuthService !== 'undefined' ? AuthService.getUser() : null;
+
+        // If user is logged in, load strictly from cloud
+        if (db && fs && user) {
+            await syncFromCloud();
+            return words;
+        }
+
+        // If guest mode, load from localStorage or words.json
         const stored = localStorage.getItem('english_words_app');
         if (stored) {
             try {
                 words = JSON.parse(stored);
             } catch (e) {
-                console.error('LocalStorage error', e);
+                words = [];
             }
         } else {
             try {
@@ -26,23 +37,15 @@ const StorageRepository = (() => {
                 if (response.ok) {
                     words = await response.json();
                 } else {
-                    throw new Error('words.json not found');
+                    words = window.initialWordsData ? [...window.initialWordsData] : [];
                 }
             } catch (err) {
-                if (window.initialWordsData) {
-                    words = [...window.initialWordsData];
-                } else {
-                    words = [];
-                }
+                words = window.initialWordsData ? [...window.initialWordsData] : [];
             }
         }
 
         normalizeTimestamps(words);
         saveLocal();
-
-        if (db && fs && typeof AuthService !== 'undefined' && AuthService.getUser()) {
-            await syncFromCloud();
-        }
 
         if (typeof UIRenderer !== 'undefined') {
             UIRenderer.updateStats(words);
@@ -74,40 +77,22 @@ const StorageRepository = (() => {
         try {
             const wordsRef = fs.collection(db, "users", user.uid, "words");
             const querySnapshot = await fs.getDocs(wordsRef);
-            if (!querySnapshot.empty) {
-                const cloudWords = [];
-                querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    data.id = docSnap.id;
-                    cloudWords.push(data);
-                });
-                normalizeTimestamps(cloudWords);
-                if (cloudWords.length > 0) {
-                    words = cloudWords;
-                    saveLocal();
-                    if (typeof UIRenderer !== 'undefined') {
-                        UIRenderer.updateStats(words);
-                        UIRenderer.renderCards(words);
-                    }
-                }
-            } else {
-                // If cloud is empty, seed cloud with default words using serverTimestamp
-                for (let i = 0; i < words.length; i++) {
-                    const word = words[i];
-                    delete word.id;
-                    const cleanWord = {
-                        word: word.word,
-                        transcription: word.transcription || '',
-                        translation: word.translation,
-                        status: word.status || 'red',
-                        createdAt: fs.serverTimestamp ? fs.serverTimestamp() : Date.now()
-                    };
-                    const docRef = await fs.addDoc(wordsRef, cleanWord);
-                    word.id = docRef.id;
-                    word.createdAt = Date.now();
-                    await fs.setDoc(docRef, { id: docRef.id }, { merge: true });
-                }
-                saveLocal();
+            const cloudWords = [];
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                data.id = docSnap.id;
+                cloudWords.push(data);
+            });
+            normalizeTimestamps(cloudWords);
+
+            // Cloud is the absolute source of truth for logged-in users.
+            // If Firestore collection is empty, words list is empty (0 words). No auto-seeding!
+            words = cloudWords;
+            saveLocal();
+
+            if (typeof UIRenderer !== 'undefined') {
+                UIRenderer.updateStats(words);
+                UIRenderer.renderCards(words);
             }
         } catch (e) {
             console.log('Cloud sync error:', e);
