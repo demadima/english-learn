@@ -60,6 +60,9 @@ const AuthService = (() => {
             window.location.reload();
         } catch (error) {
             console.error('Delete account error:', error);
+            if (error.code === 'auth/requires-recent-login') {
+                throw new Error('В целях безопасности для удаления аккаунта требуется повторный вход. Пожалуйста, выйдите из системы, войдите снова и повторите удаление.');
+            }
             throw error;
         }
     }
