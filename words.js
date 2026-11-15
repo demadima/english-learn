@@ -1,0 +1,58 @@
+window.initialWordsData = [
+  {
+    "id": "1",
+    "word": "van",
+    "transcription": "/væn/",
+    "translation": "фургон, микроавтобус (n.) — a delivery van",
+    "status": "green"
+  },
+  {
+    "id": "2",
+    "word": "fence",
+    "transcription": "/fens/",
+    "translation": "забор, изгородь (n.); ограждать (v.) — to fence the garden",
+    "status": "green"
+  },
+  {
+    "id": "3",
+    "word": "frequency",
+    "transcription": "/ˈfriːkwənsi/",
+    "translation": "частота, частотность (n.) — the frequency of use",
+    "status": "green"
+  },
+  {
+    "id": "4",
+    "word": "considerate",
+    "transcription": "/kənˈsɪdərət/",
+    "translation": "внимательный к другим, предупредительный — it was considerate of you",
+    "status": "yellow"
+  },
+  {
+    "id": "5",
+    "word": "convince",
+    "transcription": "/kənˈvɪns/",
+    "translation": "убеждать, уговаривать (v.) — to convince sb to do sth",
+    "status": "yellow"
+  },
+  {
+    "id": "6",
+    "word": "subtract",
+    "transcription": "/səbˈtrækt/",
+    "translation": "вычитать (v.) — subtract 5 from 10",
+    "status": "yellow"
+  },
+  {
+    "id": "7",
+    "word": "sustain",
+    "transcription": "/səˈsteɪn/",
+    "translation": "поддерживать, сохранять (v.) — to sustain growth",
+    "status": "red"
+  },
+  {
+    "id": "8",
+    "word": "approach",
+    "transcription": "/əˈprəʊtʃ/",
+    "translation": "подход (n.); приближаться (v.) — a new approach to learning",
+    "status": "red"
+  }
+];

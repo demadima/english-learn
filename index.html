@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Learn - Vocabulary Cards</title>
+
+    <!-- External Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Modular CSS Stylesheets -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+
+    <!-- Fallback JavaScript Data File (for local file:// execution) -->
+    <script src="words.js"></script>
+</head>
+<body>
+
+    <header>
+        <div class="container header-container">
+            <div class="header-main">
+                <h1 id="appTitle"><i class="fa-solid fa-graduation-cap"></i> English Vocabulary</h1>
+                <p id="appSubtitle">Карточки слов с озвучкой, наведением перевода и выбором языков</p>
+            </div>
+            <div class="lang-selector-wrapper">
+                <i class="fa-solid fa-globe"></i>
+                <select id="langSelect">
+                    <option value="ru">🇷🇺 Русский</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="uk">🇺🇦 Українська</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="it">🇮🇹 Italiano</option>
+                    <option value="pl">🇵🇱 Polski</option>
+                    <option value="pt">🇵🇹 Português</option>
+                    <option value="nl">🇳🇱 Nederlands</option>
+                    <option value="sv">🇸🇪 Svenska</option>
+                    <option value="el">🇬🇷 Ελληνικά</option>
+                    <option value="zh">🇨🇳 中文</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Stats Section -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <div class="stat-label" id="labelStatTotal">Всего слов</div>
+                    <div class="stat-value" id="statTotal">0</div>
+                </div>
+                <div class="stat-icon total"><i class="fa-solid fa-book"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <div class="stat-label" id="labelStatGreen">Выучено</div>
+                    <div class="stat-value" id="statGreen">0</div>
+                </div>
+                <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <div class="stat-label" id="labelStatYellow">Повторить</div>
+                    <div class="stat-value" id="statYellow">0</div>
+                </div>
+                <div class="stat-icon yellow"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <div class="stat-label" id="labelStatRed">Трудные</div>
+                    <div class="stat-value" id="statRed">0</div>
+                </div>
+                <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+        </div>
+
+        <!-- Toolbar & Filter Controls -->
+        <div class="controls-wrapper">
+            <!-- Row 1: Search Bar -->
+            <div class="search-row">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="Поиск слова или перевода...">
+                </div>
+            </div>
+
+            <!-- Row 2: Statuses on Left, Add Button Opposite on Right -->
+            <div class="filter-add-row">
+                <div class="filter-group" id="filterGroup">
+                    <button class="filter-btn active" data-filter="all">
+                        <span class="dot all"></span> <span id="textFilterAll">Все</span> <span class="badge-count" id="countAll">0</span>
+                    </button>
+                    <button class="filter-btn" data-filter="green">
+                        <span class="dot green"></span> <span id="textFilterGreen">Выучено</span> <span class="badge-count" id="countGreen">0</span>
+                    </button>
+                    <button class="filter-btn" data-filter="yellow">
+                        <span class="dot yellow"></span> <span id="textFilterYellow">Повторить</span> <span class="badge-count" id="countYellow">0</span>
+                    </button>
+                    <button class="filter-btn" data-filter="red">
+                        <span class="dot red"></span> <span id="textFilterRed">Трудные</span> <span class="badge-count" id="countRed">0</span>
+                    </button>
+                </div>
+
+                <button class="btn-action" id="openAddModalBtn">
+                    <i class="fa-solid fa-plus"></i> <span id="textAddWord">Добавить слово</span>
+                </button>
+            </div>
+
+            <!-- Row 3: Translation Choice & Card Sizes Close Together -->
+            <div class="settings-row">
+                <div class="reveal-mode-wrapper">
+                    <span class="reveal-label" id="labelReveal"><i class="fa-solid fa-eye"></i> Перевод:</span>
+                    <div class="reveal-btn-group" id="revealGroup">
+                        <button class="reveal-btn active" data-reveal-mode="hover">
+                            <span id="textRevealHover">По наведению</span>
+                        </button>
+                        <button class="reveal-btn" data-reveal-mode="always">
+                            <span id="textRevealAlways">Всегда виден</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="size-selector-wrapper">
+                    <span class="size-label" id="labelSize"><i class="fa-solid fa-expand"></i> Размер:</span>
+                    <div class="size-btn-group" id="sizeGroup">
+                        <button class="size-btn" data-size="xs">XS</button>
+                        <button class="size-btn" data-size="s">S</button>
+                        <button class="size-btn active" data-size="m">M</button>
+                        <button class="size-btn" data-size="l">L</button>
+                        <button class="size-btn" data-size="xl">XL</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Words Grid Container -->
+        <div class="words-grid" id="wordsGrid"></div>
+
+        <!-- Footer Tools -->
+        <div class="footer-tools">
+            <button class="export-btn" id="exportJsonBtn">
+                <i class="fa-solid fa-download"></i> <span id="textExportBtn">Выгрузить слова в words.json</span>
+            </button>
+            <button class="reset-btn" id="importJsonBtn">
+                <i class="fa-solid fa-upload"></i> <span id="textImportBtn">Загрузить слова из файла words.json</span>
+            </button>
+            <input type="file" id="importJsonInput" accept=".json" style="display: none;">
+        </div>
+    </main>
+
+    <!-- Add Word Modal Dialog -->
+    <div class="modal-overlay" id="addWordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitleText">Добавить новое слово</h3>
+                <button class="icon-btn" id="closeAddModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addWordForm">
+                <div class="form-group">
+                    <label for="newWord" id="labelNewWord">Английское слово *</label>
+                    <input type="text" id="newWord" required placeholder="например: approach">
+                </div>
+                <div class="form-group">
+                    <label for="newTranscription" id="labelNewTranscription">Транскрипция</label>
+                    <input type="text" id="newTranscription" placeholder="например: /əˈprəʊtʃ/">
+                </div>
+                <div class="form-group">
+                    <label for="newTranslation" id="labelNewTranslation">Перевод *</label>
+                    <input type="text" id="newTranslation" required placeholder="например: подход; приближаться">
+                </div>
+                <div class="form-group">
+                    <label id="labelNewStatus">Начальный статус</label>
+                    <div class="modal-status-selector">
+                        <button type="button" class="modal-status-opt red active" data-status="red">
+                            <span>🔴</span> <span id="optStatusRed">Трудное</span>
+                        </button>
+                        <button type="button" class="modal-status-opt yellow" data-status="yellow">
+                            <span>🟡</span> <span id="optStatusYellow">Повторить</span>
+                        </button>
+                        <button type="button" class="modal-status-opt green" data-status="green">
+                            <span>🟢</span> <span id="optStatusGreen">Выучено</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="newStatus" value="red">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" id="cancelAddModalBtn">Отмена</button>
+                    <button type="submit" class="btn-primary" id="submitAddModalBtn">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modular Application JavaScript Files -->
+    <script src="js/i18n.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

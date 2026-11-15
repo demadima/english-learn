@@ -1,0 +1,176 @@
+/**
+ * Main Application Controller
+ * Orchestrates models, services, events, and views.
+ */
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Initialize Audio Service
+    AudioService.init();
+
+    // 2. Load Words Data
+    const words = await StorageRepository.load();
+
+    // 3. Initialize UI Components, Reveal Mode & Language
+    UIRenderer.setSize(UIRenderer.getSize());
+    UIRenderer.setRevealMode(UIRenderer.getRevealMode());
+    UIRenderer.updateStats(words);
+    UIRenderer.applyLanguage();
+
+    // 4. Bind Global Event Listeners
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    // Language Switcher
+    const langSelect = document.getElementById('langSelect');
+    if (langSelect) {
+        langSelect.addEventListener('change', (e) => {
+            I18nService.setLang(e.target.value);
+            UIRenderer.applyLanguage();
+        });
+    }
+
+    // Size Selector Buttons
+    const sizeBtns = document.querySelectorAll('.size-btn');
+    sizeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const selectedSize = btn.getAttribute('data-size');
+            UIRenderer.setSize(selectedSize);
+        });
+    });
+
+    // Reveal Translation Mode Selector Buttons
+    const revealBtns = document.querySelectorAll('.reveal-btn');
+    revealBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.getAttribute('data-reveal-mode');
+            UIRenderer.setRevealMode(mode);
+        });
+    });
+
+    // Filter Buttons
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filter = btn.getAttribute('data-filter');
+            UIRenderer.setFilter(filter);
+            UIRenderer.renderCards(StorageRepository.getWords());
+        });
+    });
+
+    // Search Bar Input
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            UIRenderer.setSearchQuery(e.target.value);
+            UIRenderer.renderCards(StorageRepository.getWords());
+        });
+    }
+
+    // Export JSON Button
+    const exportBtn = document.getElementById('exportJsonBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            StorageRepository.exportJson();
+        });
+    }
+
+    // Import JSON File Button
+    const importBtn = document.getElementById('importJsonBtn');
+    const importInput = document.getElementById('importJsonInput');
+
+    if (importBtn && importInput) {
+        importBtn.addEventListener('click', () => importInput.click());
+
+        importInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedWords = JSON.parse(event.target.result);
+                    if (Array.isArray(importedWords)) {
+                        StorageRepository.setWords(importedWords);
+                        UIRenderer.updateStats(importedWords);
+                        UIRenderer.renderCards(importedWords);
+
+                        const t = I18nService.t();
+                        alert(`${t.alertImportSuccess} ${importedWords.length}`);
+                    } else {
+                        alert('Invalid JSON format');
+                    }
+                } catch (err) {
+                    const t = I18nService.t();
+                    alert(`${t.alertImportError} ${err.message}`);
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+    }
+
+    // Modal Status Selector Pills
+    const modalStatusOpts = document.querySelectorAll('.modal-status-opt');
+    modalStatusOpts.forEach(btn => {
+        btn.addEventListener('click', () => {
+            modalStatusOpts.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const statusInput = document.getElementById('newStatus');
+            if (statusInput) {
+                statusInput.value = btn.getAttribute('data-status');
+            }
+        });
+    });
+
+    // Add Word Modal Dialog Handlers
+    const modal = document.getElementById('addWordModal');
+    const openModalBtn = document.getElementById('openAddModalBtn');
+    const closeModalBtn = document.getElementById('closeAddModalBtn');
+    const cancelModalBtn = document.getElementById('cancelAddModalBtn');
+    const addForm = document.getElementById('addWordForm');
+
+    if (modal && openModalBtn && addForm) {
+        const openModal = () => modal.classList.add('active');
+        const closeModal = () => {
+            modal.classList.remove('active');
+            addForm.reset();
+            modalStatusOpts.forEach(b => b.classList.remove('active'));
+            const redBtn = document.querySelector('.modal-status-opt.red');
+            if (redBtn) redBtn.classList.add('active');
+            const statusInput = document.getElementById('newStatus');
+            if (statusInput) statusInput.value = 'red';
+        };
+
+        openModalBtn.addEventListener('click', openModal);
+        if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+        if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        addForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const wordVal = document.getElementById('newWord').value.trim();
+            const transVal = document.getElementById('newTranscription').value.trim();
+            const translationVal = document.getElementById('newTranslation').value.trim();
+            const statusVal = document.getElementById('newStatus').value || 'red';
+
+            if (!wordVal || !translationVal) return;
+
+            const newEntry = {
+                id: Date.now().toString(),
+                word: wordVal,
+                transcription: transVal,
+                translation: translationVal,
+                status: statusVal
+            };
+
+            StorageRepository.addWord(newEntry);
+            UIRenderer.updateStats(StorageRepository.getWords());
+            UIRenderer.renderCards(StorageRepository.getWords());
+            closeModal();
+            AudioService.speak(newEntry.word);
+        });
+    }
+}
