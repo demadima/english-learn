@@ -1,6 +1,6 @@
 /**
  * Firebase Authentication Service
- * Manages user sign up, sign in, sign out, and auth state observers.
+ * Manages user sign up, sign in, sign out, account deletion, and auth state observers.
  */
 const AuthService = (() => {
     let auth = null;
@@ -38,6 +38,32 @@ const AuthService = (() => {
         return await signOut(auth);
     }
 
+    async function deleteAccount() {
+        if (!currentUser) return;
+        const db = window.firebaseDb;
+        const fs = window.firebaseFirestore;
+        const uid = currentUser.uid;
+        const { deleteUser } = window.firebaseAuthModule;
+
+        try {
+            // 1. Delete all user words in Firestore
+            if (db && fs) {
+                const wordsRef = fs.collection(db, "users", uid, "words");
+                const snapshot = await fs.getDocs(wordsRef);
+                const deletePromises = snapshot.docs.map(docSnap => fs.deleteDoc(docSnap.ref));
+                await Promise.all(deletePromises);
+            }
+
+            // 2. Delete Firebase Auth user account
+            await deleteUser(currentUser);
+            localStorage.clear();
+            window.location.reload();
+        } catch (error) {
+            console.error('Delete account error:', error);
+            throw error;
+        }
+    }
+
     function updateAuthUI(user) {
         const authContainer = document.getElementById('userProfileBar');
         const userEmailSpan = document.getElementById('userEmailSpan');
@@ -59,6 +85,7 @@ const AuthService = (() => {
         getUser,
         login,
         register,
-        logout
+        logout,
+        deleteAccount
     };
 })();

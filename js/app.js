@@ -204,6 +204,20 @@ function setupEventListeners() {
         });
     }
 
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', async () => {
+            const t = I18nService.t();
+            if (confirm(t.confirmDeleteAccount || "Вы действительно хотите полностью удалить свой аккаунт и все сохраненные слова?")) {
+                try {
+                    await AuthService.deleteAccount();
+                } catch (err) {
+                    alert(err.message || "Ошибка удаления аккаунта. Возможно, требуется повторный вход.");
+                }
+            }
+        });
+    }
+
     // Modal Status Selector Pills
     const modalStatusOpts = document.querySelectorAll('.modal-status-opt');
     modalStatusOpts.forEach(btn => {

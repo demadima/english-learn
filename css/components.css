@@ -68,6 +68,24 @@
     background: var(--red);
 }
 
+.btn-delete-account {
+    background: rgba(239, 68, 68, 0.3);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.btn-delete-account:hover {
+    background: var(--red);
+}
+
 /* 2. Stats Section */
 .stats-grid {
     display: grid;
