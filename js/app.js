@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 3. Initialize UI Components, Reveal Mode & Language
     UIRenderer.setSize(UIRenderer.getSize());
     UIRenderer.setRevealMode(UIRenderer.getRevealMode());
+    UIRenderer.setSortMode(UIRenderer.getSortMode());
     UIRenderer.updateStats(words);
     UIRenderer.applyLanguage();
 
@@ -66,6 +67,14 @@ function setupEventListeners() {
         });
     }
 
+    // Sort Select Handler
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+            UIRenderer.setSortMode(e.target.value);
+        });
+    }
+
     // Export JSON Button
     const exportBtn = document.getElementById('exportJsonBtn');
     if (exportBtn) {
@@ -109,6 +118,88 @@ function setupEventListeners() {
         });
     }
 
+    // Auth Modal & Form Handlers
+    const authModal = document.getElementById('authModal');
+    const openAuthModalBtn = document.getElementById('openAuthModalBtn');
+    const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+    const cancelAuthModalBtn = document.getElementById('cancelAuthModalBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const authForm = document.getElementById('authForm');
+    const tabLoginBtn = document.getElementById('tabLoginBtn');
+    const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+    let authMode = 'login'; // 'login' or 'register'
+
+    if (authModal && openAuthModalBtn) {
+        const openAuth = () => authModal.classList.add('active');
+        const closeAuth = () => {
+            authModal.classList.remove('active');
+            if (authForm) authForm.reset();
+            const err = document.getElementById('authErrorMsg');
+            if (err) err.style.display = 'none';
+        };
+
+        openAuthModalBtn.addEventListener('click', openAuth);
+        if (closeAuthModalBtn) closeAuthModalBtn.addEventListener('click', closeAuth);
+        if (cancelAuthModalBtn) cancelAuthModalBtn.addEventListener('click', closeAuth);
+
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) closeAuth();
+        });
+
+        if (tabLoginBtn && tabRegisterBtn) {
+            tabLoginBtn.addEventListener('click', () => {
+                authMode = 'login';
+                tabLoginBtn.classList.add('active');
+                tabRegisterBtn.classList.remove('active');
+                const t = I18nService.t();
+                document.getElementById('submitAuthBtn').textContent = t.submitLogin;
+            });
+
+            tabRegisterBtn.addEventListener('click', () => {
+                authMode = 'register';
+                tabRegisterBtn.classList.add('active');
+                tabLoginBtn.classList.remove('active');
+                const t = I18nService.t();
+                document.getElementById('submitAuthBtn').textContent = t.submitRegister;
+            });
+        }
+
+        if (authForm) {
+            authForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('authEmail').value.trim();
+                const password = document.getElementById('authPassword').value.trim();
+                const errDiv = document.getElementById('authErrorMsg');
+
+                try {
+                    if (errDiv) errDiv.style.display = 'none';
+                    if (authMode === 'login') {
+                        await AuthService.login(email, password);
+                    } else {
+                        await AuthService.register(email, password);
+                    }
+                    closeAuth();
+                } catch (err) {
+                    if (errDiv) {
+                        errDiv.textContent = err.message;
+                        errDiv.style.display = 'block';
+                    }
+                }
+            });
+        }
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await AuthService.logout();
+                window.location.reload();
+            } catch (err) {
+                console.error('Logout error', err);
+            }
+        });
+    }
+
     // Modal Status Selector Pills
     const modalStatusOpts = document.querySelectorAll('.modal-status-opt');
     modalStatusOpts.forEach(btn => {
@@ -130,7 +221,17 @@ function setupEventListeners() {
     const addForm = document.getElementById('addWordForm');
 
     if (modal && openModalBtn && addForm) {
-        const openModal = () => modal.classList.add('active');
+        const openModal = () => {
+            const user = AuthService.getUser();
+            if (!user) {
+                const t = I18nService.t();
+                alert(t.authRequiredMsg);
+                const authModal = document.getElementById('authModal');
+                if (authModal) authModal.classList.add('active');
+                return;
+            }
+            modal.classList.add('active');
+        };
         const closeModal = () => {
             modal.classList.remove('active');
             addForm.reset();

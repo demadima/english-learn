@@ -1,12 +1,13 @@
 /**
  * UI Renderer & View Component Manager
- * Handles DOM rendering, i18n text bindings, size variations, and reveal mode.
+ * Handles DOM rendering, i18n text bindings, size variations, reveal mode, and sorting.
  */
 const UIRenderer = (() => {
     let activeFilter = 'all';
     let searchQuery = '';
     let currentSize = localStorage.getItem('english_card_size') || 'm';
     let currentRevealMode = localStorage.getItem('english_reveal_translation_mode') || 'hover';
+    let currentSortMode = localStorage.getItem('english_vocab_sort') || 'date';
 
     function setSize(size) {
         currentSize = size;
@@ -30,6 +31,14 @@ const UIRenderer = (() => {
         document.querySelectorAll('.reveal-btn').forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-reveal-mode') === mode);
         });
+    }
+
+    function setSortMode(mode) {
+        currentSortMode = mode;
+        localStorage.setItem('english_vocab_sort', mode);
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) sortSelect.value = mode;
+        renderCards(StorageRepository.getWords());
     }
 
     function setFilter(filter) {
@@ -89,6 +98,18 @@ const UIRenderer = (() => {
         document.getElementById('textRevealHover').textContent = t.revealHover;
         document.getElementById('textRevealAlways').textContent = t.revealAlways;
 
+        const labelSort = document.getElementById('labelSort');
+        if (labelSort) labelSort.innerHTML = '<i class="fa-solid fa-arrow-down-short-wide"></i> ' + t.sortLabel;
+        const sortOptDate = document.getElementById('sortOptDate');
+        if (sortOptDate) sortOptDate.textContent = t.sortDate;
+        const sortOptColor = document.getElementById('sortOptColor');
+        if (sortOptColor) sortOptColor.textContent = t.sortColor;
+        const sortOptLength = document.getElementById('sortOptLength');
+        if (sortOptLength) sortOptLength.textContent = t.sortLength;
+
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) sortSelect.value = currentSortMode;
+
         document.getElementById('textAddWord').textContent = t.addWordBtn;
 
         document.getElementById('textExportBtn').textContent = t.exportBtn;
@@ -110,6 +131,27 @@ const UIRenderer = (() => {
         document.getElementById('cancelAddModalBtn').textContent = t.btnCancel;
         document.getElementById('submitAddModalBtn').textContent = t.btnAdd;
 
+        const loginBtn = document.getElementById('textLoginBtn');
+        if (loginBtn) loginBtn.textContent = t.loginBtn;
+
+        const authModalTitle = document.getElementById('authModalTitleText');
+        if (authModalTitle) authModalTitle.textContent = t.authModalTitle;
+
+        const tabLogin = document.getElementById('tabLoginBtn');
+        if (tabLogin) tabLogin.textContent = t.tabLogin;
+
+        const tabRegister = document.getElementById('tabRegisterBtn');
+        if (tabRegister) tabRegister.textContent = t.tabRegister;
+
+        const labelAuthEmail = document.getElementById('labelAuthEmail');
+        if (labelAuthEmail) labelAuthEmail.textContent = t.emailLabel;
+
+        const labelAuthPassword = document.getElementById('labelAuthPassword');
+        if (labelAuthPassword) labelAuthPassword.textContent = t.passwordLabel;
+
+        const cancelAuthModalBtn = document.getElementById('cancelAuthModalBtn');
+        if (cancelAuthModalBtn) cancelAuthModalBtn.textContent = t.btnCancel;
+
         renderCards(StorageRepository.getWords());
     }
 
@@ -127,6 +169,19 @@ const UIRenderer = (() => {
             const matchesSearch = item.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                   item.translation.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesFilter && matchesSearch;
+        });
+
+        // Apply sorting
+        filteredWords.sort((a, b) => {
+            if (currentSortMode === 'date') {
+                return (b.createdAt || 0) - (a.createdAt || 0); // Newest first
+            } else if (currentSortMode === 'color') {
+                const priority = { red: 0, yellow: 1, green: 2 };
+                return (priority[a.status] ?? 3) - (priority[b.status] ?? 3);
+            } else if (currentSortMode === 'length') {
+                return a.word.length - b.word.length; // Shortest first
+            }
+            return 0;
         });
 
         if (filteredWords.length === 0) {
@@ -235,12 +290,14 @@ const UIRenderer = (() => {
     return {
         setSize,
         setRevealMode,
+        setSortMode,
         setFilter,
         setSearchQuery,
         updateStats,
         applyLanguage,
         renderCards,
         getSize: () => currentSize,
-        getRevealMode: () => currentRevealMode
+        getRevealMode: () => currentRevealMode,
+        getSortMode: () => currentSortMode
     };
 })();
