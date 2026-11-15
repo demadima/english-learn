@@ -95,13 +95,16 @@ function setupEventListeners() {
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = async (event) => {
                 try {
                     const importedWords = JSON.parse(event.target.result);
                     if (Array.isArray(importedWords)) {
-                        StorageRepository.setWords(importedWords);
-                        UIRenderer.updateStats(importedWords);
-                        UIRenderer.renderCards(importedWords);
+                        UIRenderer.showLoader("Загрузка и сохранение слов в базу...");
+                        await StorageRepository.setWords(importedWords);
+                        UIRenderer.hideLoader();
+
+                        UIRenderer.updateStats(StorageRepository.getWords());
+                        UIRenderer.renderCards(StorageRepository.getWords());
 
                         const t = I18nService.t();
                         alert(`${t.alertImportSuccess} ${importedWords.length}`);
@@ -109,6 +112,7 @@ function setupEventListeners() {
                         alert('Invalid JSON format');
                     }
                 } catch (err) {
+                    UIRenderer.hideLoader();
                     const t = I18nService.t();
                     alert(`${t.alertImportError} ${err.message}`);
                 }

@@ -278,6 +278,18 @@ const UIRenderer = (() => {
         });
     }
 
+    function showLoader(text = 'Загрузка и сохранение слов...') {
+        const overlay = document.getElementById('loadingOverlay');
+        const textEl = document.getElementById('loadingText');
+        if (textEl) textEl.textContent = text;
+        if (overlay) overlay.classList.add('active');
+    }
+
+    function hideLoader() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.classList.remove('active');
+    }
+
     function escapeHtml(str) {
         return (str || '')
             .replace(/&/g, "&amp;")
@@ -296,6 +308,8 @@ const UIRenderer = (() => {
         updateStats,
         applyLanguage,
         renderCards,
+        showLoader,
+        hideLoader,
         getSize: () => currentSize,
         getRevealMode: () => currentRevealMode,
         getSortMode: () => currentSortMode

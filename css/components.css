@@ -941,3 +941,23 @@
     font-size: 0.95rem;
     padding: 10px 8px;
 }
+
+/* Loading Modal */
+.loading-modal {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    text-align: center;
+}
+
+.loading-modal i {
+    font-size: 2.5rem;
+    color: var(--primary);
+}
